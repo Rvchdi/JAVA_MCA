@@ -22,7 +22,7 @@ public class UserDaoImp implements UserDao{
             ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
 
-            // Check if the query returned any rows
+
             isAuthenticated = rs.next();
         } catch (SQLException e) {
             throw new RuntimeException(e);

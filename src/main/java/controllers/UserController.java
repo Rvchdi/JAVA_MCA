@@ -21,13 +21,34 @@ public class UserController extends HttpServlet {
     private final String SIGNUP = "/TRANSPORT-APP/Views/Guest/signup.jsp";
     private final String SUCCESS = "/TRANSPORT-APP/Views/Guest/success.jsp";
 
+
     UserDao dao = new UserDaoImp();
 
     @Override
 
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String path = req.getServletPath();
-        int id;
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute("connectedUser") != null) {
+            switch (path) {
+
+                case "/signup":
+                    req.getRequestDispatcher(SUCCESS).forward(req, resp);
+                    return;
+                case "/login":
+                    req.getRequestDispatcher(SUCCESS).forward(req, resp);
+                    return;
+                case "/success":
+                    req.getRequestDispatcher(SUCCESS).forward(req, resp);
+                    return;
+
+            }
+        } else {
+            if (!path.equals("/signup") && !path.equals("/login")) {
+                resp.sendRedirect(req.getContextPath() + "/login");
+                return;
+            }
+        }
         switch (path) {
             case "/signup":
                 req.getRequestDispatcher(SIGNUP).forward(req, resp);
@@ -36,16 +57,10 @@ public class UserController extends HttpServlet {
             case "/success":
                 req.getRequestDispatcher(SUCCESS).forward(req, resp);
         }
-        if(req.getServletPath().equals("/login")){
-            req.getRequestDispatcher(LOGIN).forward(req,resp);
-        }
-        else{
-            HttpSession session = req.getSession(true);
-            session.invalidate();
-            System.out.println("Disconnected");
-            resp.sendRedirect(req.getContextPath()+"/login");
-        }
+
+
     }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String nom, adresse, cin, date,email,pwd;
@@ -53,17 +68,21 @@ public class UserController extends HttpServlet {
         String path = req.getServletPath();
         Client client;
         switch (path) {
+            //  Login
             case "/client/login":
                 String Email = req.getParameter("email");
                 String password = req.getParameter("pwd");
                 boolean isAuthenticated = ((UserDaoImp) dao).login(Email, password);
                 if (isAuthenticated) {
+                    HttpSession session = req.getSession(true);
+                    session.setAttribute("connectedUser", Email);
                     System.out.println("Login successful for: " + Email);
                     resp.sendRedirect(req.getContextPath() + "/success");
                 } else {
                     resp.sendRedirect(req.getContextPath() + "/login?error=true");
                 }
                 break;
+                // Create account
             case "/client/add":
                 nom = req.getParameter("name");
                 adresse = req.getParameter("address");
